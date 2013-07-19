@@ -145,29 +145,17 @@ uint16_t get_opcode(s_emu *emu) {
 
 int execute_opcode(s_emu *emu, uint16_t op) {
 	//printf("Current opcode: %X\n", op);
-// 	00CN* Scroll display N lines down
-// 00FB* Scroll display 4 pixels right
-// 00FC* Scroll display 4 pixels left
-// 00FD* Exit CHIP interpreter
-// 00FE* Disable extended screen mode
-// 00FF* Enable extended screen mode for full-screen graphics
-// DXYN* Show N-byte sprite from M(I) at coords (VX,VY), VF :=
-// collision. If N=0 and extended mode, show 16x16 sprite.
-
-// FX30* Point I to 10-byte font sprite for digit VX (0..9)
-// FX75* Store V0..VX in RPL user flags (X <= 7)
-// FX85* Read V0..VX from RPL user flags (X <= 7)
 	switch (op & 0xF000) {
 		case 0x0000: {
 			switch (op & 0x00FF) {
-				case 0x00E0: //clearscreen
+				case 0x00E0: //c
 					clear_screen(emu);
 					emu->display_changed = 1;
 					break;
-				case 0x00EE:
+				case 0x00EE: //c
 					emu->MC = pop(emu);
 					break;
-				case 0x00FB:
+				case 0x00FB: //sc
 					for (uint8_t j = 0; j < Y; ++j)
 						for (int i = X - 4 - 1; i >= 0; --i)
 							emu->display[j][i+4] = emu->display[j][i];
@@ -176,7 +164,7 @@ int execute_opcode(s_emu *emu, uint16_t op) {
 							emu->display[j][i] = 0;
 					emu->display_changed = 1;
 					break;
-				case 0x00FC:
+				case 0x00FC:// sc
 					for (uint8_t j = 0; j < Y; ++j)
 						for (uint8_t i = 4; i < X; ++i)
 							emu->display[j][i-4] = emu->display[j][i];
@@ -185,16 +173,16 @@ int execute_opcode(s_emu *emu, uint16_t op) {
 							emu->display[j][i] = 0;
 					emu->display_changed = 1;
 					break;
-				case 0x00FD:
+				case 0x00FD: //sc
 					return -1;
-				case 0x00FE:
+				case 0x00FE: //sc
 					emu->extended = 0;
 					break;
-				case 0x00FF:
+				case 0x00FF: //sc
 					emu->extended = 1;
 					break;
 				default:
-					if (VY == 0x00C0) { //case 0x00CN
+					if (VY == 0x00C0) { //sc
 						for (uint8_t j = Y - N - 1; j > 0; --j)
 							for (uint8_t i = 0; i < X; ++i)
 								emu->display[j+N][i] = emu->display[j][i];
@@ -204,46 +192,46 @@ int execute_opcode(s_emu *emu, uint16_t op) {
 			}
 		}
 		break;
-		case 0x1000:
+		case 0x1000:// c
 			emu->MC = NNN - 2;
 			break;
-		case 0x2000: //calls subroutine at NNN
+		case 0x2000: //c
 			push(emu, emu->MC);
 			emu->MC = NNN - 2;
 			break;
-		case 0x3000: //skips the next instruction if VX equals NN
+		case 0x3000: //c
 			if (emu->registers[VX] == NN)
 				emu->MC += 2;
 			break;
-		case 0x4000: //skips the next instruction if VX doesnt equals NN
+		case 0x4000: //c
 			if (emu->registers[VX] != NN)
 				emu->MC += 2;
 			break;
-		case 0x5000: //skips the next instruction if VX equals VY (5XY0)
+		case 0x5000: //c
 			if (emu->registers[VX] == emu->registers[VY])
 				emu->MC += 2;
 			break;
-		case 0x6000: //sets VX to NN
+		case 0x6000: //c
 			emu->registers[VX] = NN;
 			break;
-		case 0x7000: //adds NN to VX
+		case 0x7000: //c
 			emu->registers[VX] += NN;
 			break;
 		case 0x8000: {
 			switch (op & 0xF00F) {
-				case 0x8000: //VX = VY
+				case 0x8000: //c
 					emu->registers[VX] = emu->registers[VY];
 					break;
-				case 0x8001: //VX = VX | VY
+				case 0x8001: //c
 					emu->registers[VX] |= emu->registers[VY];
 					break;
-				case 0x8002: //VX = VX & VY
+				case 0x8002: //c
 					emu->registers[VX] &= emu->registers[VY];
 					break;
-				case 0x8003: //VX = VX ^ VY
+				case 0x8003: //c
 					emu->registers[VX] ^= emu->registers[VY];
 					break;
-				case 0x8004: {//VX + VY, if carry then VF = 1 else 0
+				case 0x8004: {//c
 					int t = emu->registers[VX] + emu->registers[VY];
 					if (t > 255)
 						emu->registers[0xF] = 1;
@@ -251,7 +239,7 @@ int execute_opcode(s_emu *emu, uint16_t op) {
 						emu->registers[0xF] = 0;
 				}
 				break;
-				case 0x8005: {//VX - VY, if borrow then VF = 0 else 1
+				case 0x8005: {//c
 					int t = emu->registers[VX] - emu->registers[VY];
 					if (t < 0)
 						emu->registers[0xF] = 0;
@@ -259,11 +247,11 @@ int execute_opcode(s_emu *emu, uint16_t op) {
 						emu->registers[0xF] = 1;
 				}
 				break;
-				case 0x8006: //VX >> 1, VF is set to the value of the least significant bit of VX before the shift
+				case 0x8006: //c
 					emu->registers[0xF] = emu->registers[VX] & 0x1;
 					emu->registers[VX] = emu->registers[VX] >> 1;
 					break;
-				case 0x8007: {//VX = VY - VXm VF = 0 if borrow else 1
+				case 0x8007: {//c
 					int t = emu->registers[VY] - emu->registers[VX];
 					if (t < 0)
 						emu->registers[0xF] = 0;
@@ -272,36 +260,36 @@ int execute_opcode(s_emu *emu, uint16_t op) {
 					emu->registers[VX] = t;
 				}
 				break;
-				case 0x800E: //VX << 1, VF is set like in 0x8006 but most significant bit
+				case 0x800E: //c
 					emu->registers[0xF] = emu->registers[VX] & 0x80;
 					emu->registers[VX] = emu->registers[VX] << 1;
 					break;
 				}
 			}
 			break;
-		case 0x9000: // skips the next instruction if VX != VY
+		case 0x9000: // c
 			if (emu->registers[VX] != emu->registers[VY])
 				emu->MC += 2;
 			break;
-		case 0xA000: //sets rI to the NNN
+		case 0xA000: //c
 			emu->rI = NNN;
 			break;
-		case 0xB000: //jumps to the NNN + V0
+		case 0xB000: //c
 			emu->MC = NNN + emu->registers[0x0] - 2;
 			break;
-		case 0xC000: //sets VX to a random number & NN
+		case 0xC000: //c
 			emu->registers[VX] = (rand() % 256) & (NN);
 			break;
-		case 0xD000:
+		case 0xD000: //c
 			draw_opcode(emu, op);
 			break;
 		case 0xE000: {
 			switch (op & 0xF0FF) {
-				case 0xE09E: //skips the next instruction if key stored in VX is pressed(EX9E)
+				case 0xE09E: //c
 					if (key_pressed(emu) == emu->registers[VX])
 						emu->MC += 2;
 					break;
-				case 0xE0A1:
+				case 0xE0A1: //c
 					if (key_pressed(emu) != emu->registers[VX])
 						emu->MC += 2;
 					//skips the next instruction if key stored in Vx isnt pressed
@@ -310,10 +298,10 @@ int execute_opcode(s_emu *emu, uint16_t op) {
 		break;
 		case 0xF000:
 			switch (op & 0xF0FF) {
-				case 0xF007: //VX = delay_timer
+				case 0xF007: //c
 					emu->registers[VX] = emu->delay_timer;
 					break;
-				case 0xF00A: {//wait for key press then store it in VX (need implement)
+				case 0xF00A: {//c
 					uint8_t t = key_pressed(emu);
 					if (t != 16)
 						emu->registers[VX] = t;
@@ -321,42 +309,39 @@ int execute_opcode(s_emu *emu, uint16_t op) {
 						emu->MC -= 2;
 				}
 				break;
-				case 0xF015: //delay_timer = VX
+				case 0xF015: //c
 					emu->delay_timer = emu->registers[VX];
 					break;
-				case 0xF018: //sound_timer = VX
+				case 0xF018: //c
 					emu->sound_timer = emu->registers[VX];
 					break;
-				case 0xF01E: //rI += VX
+				case 0xF01E: //c
 					emu->rI += emu->registers[VX];
 					break;
-				case 0xF029:
+				case 0xF029: //c
 					emu->rI = 160 + 5 * emu->registers[VX];
 					break;
-				case 0xF033:
+				case 0xF033: //c
 					emu->mem[emu->rI] = emu->registers[VX] / 100;
 					emu->mem[emu->rI + 1] = (emu->registers[VX] % 100) / 10;
 					emu->mem[emu->rI + 2] = emu->registers[VX] % 10;
 					break;
-				case 0xF055: //stores V0-VX in memory starting at rI
+				case 0xF055: //c
 					for (uint8_t i = 0; i < 16; ++i)
 						emu->mem[emu->rI + i] = emu->registers[i];
 					break;
-				case 0xF065: //fills V0-VX with values from memory starting from rI
+				case 0xF065: //c
 					for (uint8_t i = 0; i < 16; ++i)
 						emu->registers[i] = emu->mem[emu->rI + i];
 					break;
-					// FX30* Point I to 10-byte font sprite for digit VX (0..9)
-					// FX75* Store V0..VX in RPL user flags (X <= 7)
-					// FX85* Read V0..VX from RPL user flags (X <= 7)
-				case 0xF030:
+				case 0xF030: //sc
 					emu->rI = emu->registers[VX]*10;
 					break;
-				case 0xF075:
+				case 0xF075: //sc
 					for (uint8_t i = 0; i < VX - 1; ++i)
 						emu->schip_reg[i] = emu->registers[i];
 					break;
-				case 0xF085:
+				case 0xF085: //sc
 					for (uint8_t i = 0; i < VX - 1; ++i)
 						emu->registers[i] = emu->schip_reg[i];
 					break;

@@ -1,2 +1,2 @@
 Bad written chip8/schip emulator.
-Place SDL in "include" directory and libs in "lib" and use make.
+You can use this program how you want
