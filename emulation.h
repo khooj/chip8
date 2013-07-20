@@ -8,8 +8,8 @@
 #define N(x) ((x)&0x000F)
 #define NN(x) ((x)&0x00FF)
 #define NNN(x) ((x)&0x0FFF)
-#define X 128
-#define Y 64
+#define X 64
+#define Y 32
 
 typedef struct
 {

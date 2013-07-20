@@ -96,30 +96,6 @@ void clear_screen(s_emu *emu) {
 // DXYN* Show N-byte sprite from M(I) at coords (VX,VY), VF :=
 // collision. If N=0 and extended mode, show 16x16 sprite.
 
-void draw_opcode(s_emu *emu, uint16_t op) {//tl;dr draws a sprite
-	uint8_t x = emu->registers[VX];
-	uint8_t y = emu->registers[VY];
-	emu->registers[0xF] = 0;
-	if (N == 0 && emu->extended) {
-		for (uint8_t i = 0; i < N; ++i)
-			for (uint8_t j = 0; j < 16; ++j) {
-				int t = (emu->mem[emu->rI + i + (uint8_t)(j / 8)] & (1 << (7 - j % 8))) >> (7 - j % 8);
-				if (emu->display[i+y][j+x] && emu->display[i+y][j+x] ^ t)
-					emu->registers[0xF] = 1;
-				emu->display[i+y][j+x] ^= t;
-			}
-	} else {
-		for (uint8_t i = 0; i < N; ++i)
-			for (uint8_t j = 0; j < 8; ++j) {
-				int t = (emu->mem[emu->rI + i] & (1 << (7 - j))) >> (7 - j);
-				if (emu->display[i+y][j+x] && emu->display[i+y][j+x] ^ t)
-					emu->registers[0xF] = 1;
-				emu->display[i+y][j+x] ^= t;
-			}
-	}
-	emu->display_changed = 1;
-}
-
 void handle_key(s_emu *emu, SDL_Event ev) {
 	switch (ev.type) {
 		case SDL_KEYDOWN:

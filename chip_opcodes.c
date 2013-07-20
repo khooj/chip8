@@ -133,20 +133,81 @@ int _CXKK(s_emu *emu, uint16_t opcode)
   emu->registers[VX(opcode)] = ((rand() % 256) & NN(opcode));
 }
 
-int _DXYN(s_emu *emu, uint16_t opcode);
-int _EX9E(s_emu *emu, uint16_t opcode);
-int _EXA1(s_emu *emu, uint16_t opcode);
-int _FX07(s_emu *emu, uint16_t opcode);
-int _FX0A(s_emu *emu, uint16_t opcode);
-int _FX15(s_emu *emu, uint16_t opcode);
-int _FX18(s_emu *emu, uint16_t opcode);
+int _DXYN(s_emu *emu, uint16_t opcode)
+{
+  uint8_t x = emu->registers[VX(opcode)];
+  uint8_t y = emu->registers[VY(opcode)];
+  emu->registers[0xF] = 0;
+  for (uint8_t i = 0; i < N; ++i)
+    for (uint8_t j = 0; j < 8; ++j) {
+      int t = (emu->mem[emu->rI + i] & (1 << (7 - j))) >> (7 - j);
+      if (emu->display[i+y][j+x] && emu->display[i+y][j+x] ^ t)
+        emu->registers[0xF] = 1;
+      emu->display[i+y][j+x] ^= t;
+    }
+  emu->display_changed = 1;
+}
+
+int _EX9E(s_emu *emu, uint16_t opcode)
+{
+  if (key_pressed(emu) == emu->registers[VX(opcode)])
+    emu->MC += 2;
+}
+
+int _EXA1(s_emu *emu, uint16_t opcode)
+{
+  if (key_pressed(emu) != emu->registers[VX(opcode)])
+    emu->MC += 2;
+}
+
+int _FX07(s_emu *emu, uint16_t opcode)
+{
+  emu->registers[VX(opcode)] = emu->delay_timer;
+}
+
+int _FX0A(s_emu *emu, uint16_t opcode)
+{
+  uint8_t t = key_pressed(emu);
+  if (t < 16)
+    emu->registers[VX(opcode)] = t;
+  else
+    emu->MC -= 2;
+}
+
+int _FX15(s_emu *emu, uint16_t opcode)
+{
+  emu->delay_timer = emu->registers[VX(opcode)];
+}
+
+int _FX18(s_emu *emu, uint16_t opcode)
+{
+  emu->sound_timer = emu->registers[VX(opcode)];
+}
 
 int _FX1E(s_emu *emu, uint16_t opcode)
 {
   emu->rI += emu->registers[VX(opcode)];
 }
 
-int _FX29(s_emu *emu, uint16_t opcode);
-int _FX33(s_emu *emu, uint16_t opcode);
-int _FX55(s_emu *emu, uint16_t opcode);
-int _FX65(s_emu *emu, uint16_t opcode);
+int _FX29(s_emu *emu, uint16_t opcode)
+{
+  //chip only
+  emu->rI = emu->registers[VX(opcode)] * 5 + 0;
+}
+
+int _FX33(s_emu *emu, uint16_t opcode)
+{
+  emu->mem[emu->rI] = emu->registers[VX(opcode)] / 100;
+  emu->mem[emu->rI + 1] = (emu->registers[VX(opcode)] % 100) / 10;
+  emu->mem[emu->rI + 2] = emu->registers[VX(opcode)] % 10;
+}
+
+int _FX55(s_emu *emu, uint16_t opcode)
+{
+  memcpy(emu->mem+emu->rI, emu->registers, VX(opcode));
+}
+
+int _FX65(s_emu *emu, uint16_t opcode)
+{
+  memcpy(emu->registers, emu->mem + emu->rI, VX(opcode));
+}
