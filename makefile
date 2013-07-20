@@ -1,8 +1,8 @@
 CC=gcc
 CFLAGS=-g -w -x c -std=c99
 LDFLAGS=-Iinclude -Llib -lmingw32 -lSDLmain -lSDL
-SOURCES=emulation.c main.c
-OBJECTS=emulation.o main.o
+SOURCES=emulation.c main.c chip_opcodes.c
+OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=main
 
 $(EXECUTABLE): $(OBJECTS)
