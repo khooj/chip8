@@ -29,6 +29,11 @@ int main(int argc, char *argv[])
 				case SDL_QUIT: _exit = 1; break;
 				case SDL_KEYDOWN:
 				case SDL_KEYUP:
+					if (ev.key.keysym.sym == SDLK_ESCAPE)
+					{
+						_exit = 1;
+						break;
+					}
 					handle_key(emu, ev);
 					break;
 			}

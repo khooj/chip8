@@ -1,2 +1,10 @@
-Bad written chip8/schip emulator.
+Chip8/schip emulator.
 You can use this program how you want
+
+Build
+
+make
+Place SDL.dll with main.exe to run emulator
+
+Run
+main.exe "path_to_file"
