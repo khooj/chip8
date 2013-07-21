@@ -131,6 +131,8 @@ int execute_opcode(s_emu *emu, uint16_t op) {
 				default:
 					if (VY(op) == 0x00C0) 
 						return _00CN(emu, op);
+					else
+						break;
 			}
 		}
 		case 0x1000: return _1NNN(emu, op);

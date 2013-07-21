@@ -60,7 +60,7 @@ int _DXY0(s_emu *emu, uint16_t opcode)
         emu->registers[0xF] = 1;
       emu->display[i+y][j+x] ^= t;
 
-      int t = (emu->mem[emu->rI + i+1] & (1 << (7 - j))) >> (7 - j);
+      t = (emu->mem[emu->rI + i+1] & (1 << (7 - j))) >> (7 - j);
       //check for collision
       if (emu->display[i+y][8+j+x] && emu->display[i+y][8+j+x] & t)
         emu->registers[0xF] = 1;

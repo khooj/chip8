@@ -82,7 +82,7 @@ int _8XY4(s_emu *emu, uint16_t opcode)
 int _8XY5(s_emu *emu, uint16_t opcode)
 {
   emu->registers[0xF] = 0;
-  if (emu->registers[VX(opcode)] > emu->registers[VY(opcode)])
+  if (emu->registers[VX(opcode)] >= emu->registers[VY(opcode)])
     emu->registers[0xF] = 1;
   emu->registers[VX(opcode)] -= emu->registers[VY(opcode)];
 }
@@ -96,7 +96,7 @@ int _8XY6(s_emu *emu, uint16_t opcode)
 int _8XY7(s_emu *emu, uint16_t opcode)
 {
   emu->registers[0xF] = 0;
-  if (emu->registers[VX(opcode)] < emu->registers[VY(opcode)])
+  if (emu->registers[VX(opcode)] <= emu->registers[VY(opcode)])
     emu->registers[0xF] = 1;
   emu->registers[VX(opcode)] = emu->registers[VY(opcode)] - emu->registers[VX(opcode)];
 
