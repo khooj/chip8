@@ -1,6 +1,7 @@
 #ifndef EMUL_H
 #define EMUL_H
 #include <stdint.h>
+#include <stdio.h>
 #include "SDL/SDL.h"
 
 #define VX(x) (((x)&0x0F00)>>8)
@@ -8,12 +9,15 @@
 #define N(x) ((x)&0x000F)
 #define NN(x) ((x)&0x00FF)
 #define NNN(x) ((x)&0x0FFF)
-#define X 64
-#define Y 32
+#define CHIP_X_RES 64
+#define CHIP_Y_RES 32
+#define SCHIP_X_RES 128
+#define SCHIP_Y_RES 64
+#define DEBUG(t, x) printf(t"\n", x)
 
 typedef struct
 {
-	uint8_t display[Y][X];
+	uint8_t display[SCHIP_Y_RES][SCHIP_X_RES];
 	uint8_t mem[4096];
 	uint16_t stack[16];
 	uint8_t registers[16];
@@ -47,7 +51,6 @@ uint16_t pop(s_emu *emu);
 //chip opcodes
 int _00E0(s_emu *emu, uint16_t opcode);
 int _00EE(s_emu *emu, uint16_t opcode);
-int _0NNN(s_emu *emu, uint16_t opcode);
 int _1NNN(s_emu *emu, uint16_t opcode);
 int _2NNN(s_emu *emu, uint16_t opcode);
 int _3XKK(s_emu *emu, uint16_t opcode);
@@ -84,6 +87,7 @@ int _FX65(s_emu *emu, uint16_t opcode);
 //schip opcodes
 int _00CN(s_emu *emu, uint16_t opcode);
 int _00FB(s_emu *emu, uint16_t opcode);
+int _00FC(s_emu *emu, uint16_t opcode);
 int _00FD(s_emu *emu, uint16_t opcode);
 int _00FE(s_emu *emu, uint16_t opcode);
 int _00FF(s_emu *emu, uint16_t opcode);

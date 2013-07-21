@@ -93,9 +93,6 @@ void clear_screen(s_emu *emu) {
 	memset(emu->display, 0, sizeof(emu->display));
 }
 
-// DXYN* Show N-byte sprite from M(I) at coords (VX,VY), VF :=
-// collision. If N=0 and extended mode, show 16x16 sprite.
-
 void handle_key(s_emu *emu, SDL_Event ev) {
 	switch (ev.type) {
 		case SDL_KEYDOWN:
@@ -124,203 +121,63 @@ int execute_opcode(s_emu *emu, uint16_t op) {
 	switch (op & 0xF000) {
 		case 0x0000: {
 			switch (op & 0x00FF) {
-				case 0x00E0: //c
-					clear_screen(emu);
-					emu->display_changed = 1;
-					break;
-				case 0x00EE: //c
-					emu->MC = pop(emu);
-					break;
-				case 0x00FB: //sc
-					for (uint8_t j = 0; j < Y; ++j)
-						for (int i = X - 4 - 1; i >= 0; --i)
-							emu->display[j][i+4] = emu->display[j][i];
-					for (uint8_t j = 0; j < Y; ++j)
-						for (uint8_t i = 0; i < 4; ++i)
-							emu->display[j][i] = 0;
-					emu->display_changed = 1;
-					break;
-				case 0x00FC:// sc
-					for (uint8_t j = 0; j < Y; ++j)
-						for (uint8_t i = 4; i < X; ++i)
-							emu->display[j][i-4] = emu->display[j][i];
-					for (uint8_t j = 0; j < Y; ++j)
-						for (uint8_t i = X - 1; i > X - 4 - 1; --i)
-							emu->display[j][i] = 0;
-					emu->display_changed = 1;
-					break;
-				case 0x00FD: //sc
-					return -1;
-				case 0x00FE: //sc
-					emu->extended = 0;
-					break;
-				case 0x00FF: //sc
-					emu->extended = 1;
-					break;
+				case 0x00E0: return _00E0(emu, op); 
+				case 0x00EE: return _00EE(emu, op); 
+				case 0x00FB: return _00FB(emu, op); 
+				case 0x00FC: return _00FC(emu, op); 
+				case 0x00FD: return _00FD(emu, op); 
+				case 0x00FE: return _00FE(emu, op);
+				case 0x00FF: return _00FF(emu, op);
 				default:
-					if (VY == 0x00C0) { //sc
-						for (uint8_t j = Y - N - 1; j > 0; --j)
-							for (uint8_t i = 0; i < X; ++i)
-								emu->display[j+N][i] = emu->display[j][i];
-						memset(emu->display, 0, X*N);
-					}
-					break;
+					if (VY(op) == 0x00C0) 
+						return _00CN(emu, op);
 			}
 		}
-		break;
-		case 0x1000:// c
-			emu->MC = NNN - 2;
-			break;
-		case 0x2000: //c
-			push(emu, emu->MC);
-			emu->MC = NNN - 2;
-			break;
-		case 0x3000: //c
-			if (emu->registers[VX] == NN)
-				emu->MC += 2;
-			break;
-		case 0x4000: //c
-			if (emu->registers[VX] != NN)
-				emu->MC += 2;
-			break;
-		case 0x5000: //c
-			if (emu->registers[VX] == emu->registers[VY])
-				emu->MC += 2;
-			break;
-		case 0x6000: //c
-			emu->registers[VX] = NN;
-			break;
-		case 0x7000: //c
-			emu->registers[VX] += NN;
-			break;
+		case 0x1000: return _1NNN(emu, op);
+		case 0x2000: return _2NNN(emu, op);
+		case 0x3000: return _3XKK(emu, op);
+		case 0x4000: return _4XKK(emu, op);
+		case 0x5000: return _5XY0(emu, op);
+		case 0x6000: return _6XKK(emu, op);
+		case 0x7000: return _7XKK(emu, op);
 		case 0x8000: {
 			switch (op & 0xF00F) {
-				case 0x8000: //c
-					emu->registers[VX] = emu->registers[VY];
-					break;
-				case 0x8001: //c
-					emu->registers[VX] |= emu->registers[VY];
-					break;
-				case 0x8002: //c
-					emu->registers[VX] &= emu->registers[VY];
-					break;
-				case 0x8003: //c
-					emu->registers[VX] ^= emu->registers[VY];
-					break;
-				case 0x8004: {//c
-					int t = emu->registers[VX] + emu->registers[VY];
-					if (t > 255)
-						emu->registers[0xF] = 1;
-					else
-						emu->registers[0xF] = 0;
-				}
-				break;
-				case 0x8005: {//c
-					int t = emu->registers[VX] - emu->registers[VY];
-					if (t < 0)
-						emu->registers[0xF] = 0;
-					else
-						emu->registers[0xF] = 1;
-				}
-				break;
-				case 0x8006: //c
-					emu->registers[0xF] = emu->registers[VX] & 0x1;
-					emu->registers[VX] = emu->registers[VX] >> 1;
-					break;
-				case 0x8007: {//c
-					int t = emu->registers[VY] - emu->registers[VX];
-					if (t < 0)
-						emu->registers[0xF] = 0;
-					else
-						emu->registers[0xF] = 1;
-					emu->registers[VX] = t;
-				}
-				break;
-				case 0x800E: //c
-					emu->registers[0xF] = emu->registers[VX] & 0x80;
-					emu->registers[VX] = emu->registers[VX] << 1;
-					break;
+				case 0x8000: return _8XY0(emu, op);
+				case 0x8001: return _8XY1(emu, op);
+				case 0x8002: return _8XY2(emu, op);
+				case 0x8003: return _8XY3(emu, op);
+				case 0x8004: return _8XY4(emu, op);
+				case 0x8005: return _8XY5(emu, op);
+				case 0x8006: return _8XY6(emu, op);
+				case 0x8007: return _8XY7(emu, op);
+				case 0x800E: return _8XYE(emu, op);
 				}
 			}
-			break;
-		case 0x9000: // c
-			if (emu->registers[VX] != emu->registers[VY])
-				emu->MC += 2;
-			break;
-		case 0xA000: //c
-			emu->rI = NNN;
-			break;
-		case 0xB000: //c
-			emu->MC = NNN + emu->registers[0x0] - 2;
-			break;
-		case 0xC000: //c
-			emu->registers[VX] = (rand() % 256) & (NN);
-			break;
-		case 0xD000: //c
-			draw_opcode(emu, op);
-			break;
+		case 0x9000: return _9XY0(emu, op);
+		case 0xA000: return _ANNN(emu, op);
+		case 0xB000: return _BNNN(emu, op);
+		case 0xC000: return _CXKK(emu, op);
+		case 0xD000: return _DXYN(emu, op);
 		case 0xE000: {
 			switch (op & 0xF0FF) {
-				case 0xE09E: //c
-					if (key_pressed(emu) == emu->registers[VX])
-						emu->MC += 2;
-					break;
-				case 0xE0A1: //c
-					if (key_pressed(emu) != emu->registers[VX])
-						emu->MC += 2;
-					//skips the next instruction if key stored in Vx isnt pressed
+				case 0xE09E: return _EX9E(emu, op);
+				case 0xE0A1: return _EXA1(emu, op);
 			}
 		}
-		break;
 		case 0xF000:
 			switch (op & 0xF0FF) {
-				case 0xF007: //c
-					emu->registers[VX] = emu->delay_timer;
-					break;
-				case 0xF00A: {//c
-					uint8_t t = key_pressed(emu);
-					if (t != 16)
-						emu->registers[VX] = t;
-					else
-						emu->MC -= 2;
-				}
-				break;
-				case 0xF015: //c
-					emu->delay_timer = emu->registers[VX];
-					break;
-				case 0xF018: //c
-					emu->sound_timer = emu->registers[VX];
-					break;
-				case 0xF01E: //c
-					emu->rI += emu->registers[VX];
-					break;
-				case 0xF029: //c
-					emu->rI = 160 + 5 * emu->registers[VX];
-					break;
-				case 0xF033: //c
-					emu->mem[emu->rI] = emu->registers[VX] / 100;
-					emu->mem[emu->rI + 1] = (emu->registers[VX] % 100) / 10;
-					emu->mem[emu->rI + 2] = emu->registers[VX] % 10;
-					break;
-				case 0xF055: //c
-					for (uint8_t i = 0; i < 16; ++i)
-						emu->mem[emu->rI + i] = emu->registers[i];
-					break;
-				case 0xF065: //c
-					for (uint8_t i = 0; i < 16; ++i)
-						emu->registers[i] = emu->mem[emu->rI + i];
-					break;
-				case 0xF030: //sc
-					emu->rI = emu->registers[VX]*10;
-					break;
-				case 0xF075: //sc
-					for (uint8_t i = 0; i < VX - 1; ++i)
-						emu->schip_reg[i] = emu->registers[i];
-					break;
-				case 0xF085: //sc
-					for (uint8_t i = 0; i < VX - 1; ++i)
-						emu->registers[i] = emu->schip_reg[i];
-					break;
+				case 0xF007: return _FX07(emu, op);
+				case 0xF00A: return _FX0A(emu, op);
+				case 0xF015: return _FX15(emu, op);
+				case 0xF018: return _FX18(emu, op);
+				case 0xF01E: return _FX1E(emu, op);
+				case 0xF029: return _FX29(emu, op);
+				case 0xF033: return _FX33(emu, op);
+				case 0xF055: return _FX55(emu, op);
+				case 0xF065: return _FX65(emu, op);
+				case 0xF030: return _FX30(emu, op);
+				case 0xF075: return _FX75(emu, op);
+				case 0xF085: return _FX85(emu, op);
 			}
 			break;
 		default: printf("%s %X\n", "Unknown opcode ", op);

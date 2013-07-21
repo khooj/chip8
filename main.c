@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 	int _exit = 0;
 
 	SDL_Init(SDL_INIT_EVERYTHING);
-	screen = SDL_SetVideoMode(128, 64, 8, SDL_SWSURFACE);
+	screen = SDL_SetVideoMode(SCHIP_X_RES, SCHIP_Y_RES, 8, SDL_SWSURFACE);
 	SDL_EnableUNICODE(1);
 	emu = (s_emu*)malloc(sizeof(s_emu));
 	init(emu);
@@ -43,12 +43,12 @@ int main(int argc, char *argv[])
 				return -1;
 			}
 		if (emu->extended) {
-			for (uint8_t y = 0; y < 64; ++y)
-				for (uint8_t x = 0; x < 128; ++x)
+			for (uint8_t y = 0; y < SCHIP_Y_RES; ++y)
+				for (uint8_t x = 0; x < SCHIP_X_RES; ++x)
 					putpixel(screen, x, y, pxl * emu->display[y][x]);
 		} else {
-			for (uint8_t y = 0; y < 32; ++y)
-				for (uint8_t x = 0; x < 64; ++x) {
+			for (uint8_t y = 0; y < CHIP_Y_RES; ++y)
+				for (uint8_t x = 0; x < CHIP_X_RES; ++x) {
 					putpixel(screen, x*2, y*2, pxl * emu->display[y][x]);
 					putpixel(screen, x*2+1, y*2, pxl * emu->display[y][x]);
 					putpixel(screen, x*2, y*2+1, pxl * emu->display[y][x]);

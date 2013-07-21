@@ -11,10 +11,6 @@ int _00EE(s_emu *emu, uint16_t opcode)
   emu->MC = pop(emu);
 }
 
-int _0NNN(s_emu *emu, uint16_t opcode)
-{
-}
-
 int _1NNN(s_emu *emu, uint16_t opcode)
 {
   emu->MC = NNN(opcode) - 2;  
@@ -135,12 +131,19 @@ int _CXKK(s_emu *emu, uint16_t opcode)
 
 int _DXYN(s_emu *emu, uint16_t opcode)
 {
+  if (N(opcode) == 0 && emu->extended)
+    //schip
+    return _DXY0(emu, opcode);
+
   uint8_t x = emu->registers[VX(opcode)];
   uint8_t y = emu->registers[VY(opcode)];
   emu->registers[0xF] = 0;
-  for (uint8_t i = 0; i < N; ++i)
+  for (uint8_t i = 0; i < N(opcode); ++i)
     for (uint8_t j = 0; j < 8; ++j) {
+      //takes j bit from mem[rI+i]
+      //example: j=2 from 0b11(0)10101 => 0 (taken bit in brackets)
       int t = (emu->mem[emu->rI + i] & (1 << (7 - j))) >> (7 - j);
+      //check for collision
       if (emu->display[i+y][j+x] && emu->display[i+y][j+x] ^ t)
         emu->registers[0xF] = 1;
       emu->display[i+y][j+x] ^= t;
@@ -191,8 +194,7 @@ int _FX1E(s_emu *emu, uint16_t opcode)
 
 int _FX29(s_emu *emu, uint16_t opcode)
 {
-  //chip only
-  emu->rI = emu->registers[VX(opcode)] * 5 + 0;
+  emu->rI = emu->registers[VX(opcode)] * 5 + 160;
 }
 
 int _FX33(s_emu *emu, uint16_t opcode)
@@ -204,10 +206,10 @@ int _FX33(s_emu *emu, uint16_t opcode)
 
 int _FX55(s_emu *emu, uint16_t opcode)
 {
-  memcpy(emu->mem+emu->rI, emu->registers, VX(opcode));
+  memcpy(emu->mem+emu->rI, emu->registers, VX(opcode)+1);
 }
 
 int _FX65(s_emu *emu, uint16_t opcode)
 {
-  memcpy(emu->registers, emu->mem + emu->rI, VX(opcode));
+  memcpy(emu->registers, emu->mem + emu->rI, VX(opcode)+1);
 }
