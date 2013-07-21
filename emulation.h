@@ -21,7 +21,7 @@ typedef struct
 	uint8_t mem[4096];
 	uint16_t stack[16];
 	uint8_t registers[16];
-	uint8_t schip_reg[7];
+	uint8_t schip_reg[8];
 	uint16_t rI;
 	uint8_t SP;
 	uint16_t MC;

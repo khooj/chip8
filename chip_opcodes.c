@@ -104,7 +104,7 @@ int _8XY7(s_emu *emu, uint16_t opcode)
 
 int _8XYE(s_emu *emu, uint16_t opcode)
 {
-  emu->registers[0xF] = emu->registers[VX(opcode)] & 0x80;
+  emu->registers[0xF] = (emu->registers[VX(opcode)] & 0x80) >> 7;
   emu->registers[VX(opcode)] <<= 1;
 }
 
@@ -189,6 +189,11 @@ int _FX18(s_emu *emu, uint16_t opcode)
 
 int _FX1E(s_emu *emu, uint16_t opcode)
 {
+  //undocumented feature used in Spacefight 2019! 
+  emu->registers[0xF] = 0;
+  int t = emu->rI + emu->registers[VX(opcode)];
+  if (t > 4095)
+    emu->registers[0xF] = 1;
   emu->rI += emu->registers[VX(opcode)];
 }
 

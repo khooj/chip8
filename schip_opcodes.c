@@ -76,10 +76,10 @@ int _FX30(s_emu *emu, uint16_t opcode)
 
 int _FX75(s_emu *emu, uint16_t opcode)
 {
-  memcpy(emu->mem + emu->rI, emu->schip_reg, VX(opcode)+1);
+  memcpy(emu->schip_reg, emu->registers, VX(opcode)+1);
 }
 
 int _FX85(s_emu *emu, uint16_t opcode)
 {
-  memcpy(emu->schip_reg, emu->mem + emu->rI, VX(opcode)+1);
+  memcpy(emu->registers, emu->schip_reg, VX(opcode)+1);
 }
