@@ -144,7 +144,7 @@ int _DXYN(s_emu *emu, uint16_t opcode)
       //example: j=2 from 0b11(0)10101 => 0 (taken bit in brackets)
       int t = (emu->mem[emu->rI + i] & (1 << (7 - j))) >> (7 - j);
       //check for collision
-      if (emu->display[i+y][j+x] && emu->display[i+y][j+x] ^ t)
+      if (emu->display[i+y][j+x] && emu->display[i+y][j+x] & t)
         emu->registers[0xF] = 1;
       emu->display[i+y][j+x] ^= t;
     }
